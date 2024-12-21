@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_head'); %>
+        <%- include('../_partials/_cdn_datatables'); %>
+        <%- include('../_partials/_cdn_googlecharts'); %>
+        <!-- prettier-ignore -->
+        <script type="text/javascript">
+            google.charts.load("current", { packages: ["corechart"] });
+            google.charts.setOnLoadCallback(drawChart1);
+            google.charts.setOnLoadCallback(drawChart2);
+
+            function drawChart1() {
+                fetch(`<%= baseURL %>/api/distribution_of_drugs`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const chartData = [["İlaç Adı", "Adet"]];
+
+                        data.distribution_of_drugs.forEach((item) => {
+                            chartData.push([item.drug_name, parseInt(item.drug_total_amount)]);
+                        });
+
+                        const dataTable =
+                            google.visualization.arrayToDataTable(chartData);
+
+                        const options = {
+                            chartArea: {
+                                top: 25,
+                                right: 25,
+                                bottom: 25,
+                                left: 75,
+                            },
+                        };
+
+                        const chart = new google.visualization.PieChart(
+                            document.getElementById("chart_div")
+                        );
+
+                        chart.draw(dataTable, options);
+                    })
+                    .catch((error) => {
+                        console.error(
+                            "API çağrısı sırasında bir hata oluştu:",
+                            error
+                        );
+                    });
+            }
+            function drawChart2() {
+                fetch(`<%= baseURL %>/api/distribution_of_customer`)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        const chartData = [["Cinsiyet", "Yüzde"]];
+
+                        data.distribution_of_customer.forEach((item) => {
+                            chartData.push([item.gender_name, item.number]);
+                        });
+
+                        const dataTable =
+                            google.visualization.arrayToDataTable(chartData);
+
+                        const options = {
+                            chartArea: {
+                                top: 25,
+                                right: 25,
+                                bottom: 25,
+                                left: 75,
+                            },
+                        };
+
+                        const chart = new google.visualization.PieChart(
+                            document.getElementById("chart_div2")
+                        );
+
+                        chart.draw(dataTable, options);
+                    })
+                    .catch((error) => {
+                        console.error(
+                            "API çağrısı sırasında bir hata oluştu:",
+                            error
+                        );
+                    });
+            }
+        </script>
+    </head>
+
+    <body>
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_header') %>
+        <%- include('../_partials/_sidebar') %>
+        <!-- prettier-ignore -->
+
+        <main id="main" class="main" style="min-height: 100vh">
+            <section class="section dashboard">
+                <div class="row">
+                    <div class="col-12 col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h1
+                                    class="text-center pt-3"
+                                    style="font-size: 25px; font-weight: bold"
+                                >
+                                    Satılan İlaçların Dağılımı
+                                </h1>
+                                <div
+                                    id="chart_div"
+                                    style="min-width: 100%; height: 40vh"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h1
+                                    class="text-center pt-3"
+                                    style="font-size: 25px; font-weight: bold"
+                                >
+                                    Müşterilerin Cinsiyet Dağılımı
+                                </h1>
+                                <div
+                                    id="chart_div2"
+                                    style="min-width: 100%; height: 40vh"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-12">
+                        <div class="card">
+                            <div
+                                class="card-body"
+                            >
+                                <h1
+                                    class="text-center pt-3"
+                                    style="font-size: 24px; font-weight: bold"
+                                >
+                                    Müşteri Bilgileri
+                                </h1>
+                                <table
+                                    id="table_customers"
+                                    class="display rounded"
+                                    style="
+                                        width: 100%;
+                                        background-color: whitesmoke;
+                                    "
+                                >
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">ID</th>
+                                            <th>Ad</th>
+                                            <th>Soyad</th>
+                                            <th>Cinsiyet</th>
+                                            <th class="text-center">Toplam Gelir</th>
+                                            <th class="text-center">İşlem Sayısı</th>
+                                            <th class="text-center">Satılan İlaç Adedi</th>
+                                            <th class="text-center">Sil</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- prettier-ignore -->
+                                        <% customers_detailed_infos.forEach(item => { %>
+                                        <!-- prettier-ignore -->
+                                        <tr>
+                                            <td class="text-center"><%= item.customer_id %></td>
+                                            <td><%= item.customer_name %></td>
+                                            <td><%= item.customer_surname %></td>
+                                            <td><%= item.gender_name %></td>
+                                            <td class="text-center"><%= item.total_revenue %> ₺</td>
+                                            <td class="text-center"><%= item.total_process %> Kez</td>
+                                            <td class="text-center"><%= item.total_amount %> Adet</td>
+                                            <td class="text-danger text-center">
+                                                <a href="<%= baseURL %>/customer/delete/<%= item.customer_id %>" class="btn btn-outline-danger">Sil</a>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_footer') %>
+        <%- include('../_partials/_arrowup') %>
+        <%- include('../_partials/_scripts') %>
+        <!-- prettier-ignore -->
+        <script>
+            new DataTable("#table_customers", {
+                paging: false,
+                scrollCollapse: true,
+                scrollY: "75vh",
+                order: [[4, "desc"]],
+            });
+        </script>
+    </body>
+</html>

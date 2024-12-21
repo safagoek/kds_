@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_head'); %>
+        <%- include('../_partials/_cdn_datatables'); %>
+        <%- include('../_partials/_cdn_googlecharts'); %>
+        <!-- prettier-ignore -->
+        <script type="text/javascript">
+            google.charts.load("current", { packages: ["corechart"] });
+            google.charts.setOnLoadCallback(fetchDataAndDrawChart);
+
+            async function fetchDataAndDrawChart() {
+                try {
+                    const response = await fetch(
+                        `<%= baseURL %>/api/revenue_by_drugs`
+                    );
+                    const result = await response.json();
+
+                    const chartData = [
+                        ["İlaç", "Gelir", { role: "style" }],
+                    ];
+                    result.revenue_by_drugs.forEach((item) => {
+                        const color = generateColor();
+                        chartData.push([
+                            item.drug_name,
+                            parseFloat(item.drug_total_revenue),
+                            color,
+                        ]);
+                    });
+
+                    const data =
+                        google.visualization.arrayToDataTable(chartData);
+
+                    const options = {
+                        hAxis: {
+                            title: "İlaç",
+                        },
+                        vAxis: {
+                            title: "Gelir",
+                        },
+                        legend: { position: "none" },
+                        chartArea: {
+                            top: 40,
+                            bottom: 120,
+                        },
+                    };
+
+                    const chart = new google.visualization.ColumnChart(
+                        document.getElementById("chart_div")
+                    );
+
+                    chart.draw(data, options);
+                } catch (error) {
+                    console.error("Veri çekilirken hata oluştu:", error);
+                }
+            }
+
+            // Rastgele renk oluşturma fonksiyonu
+            function generateColor() {
+                const letters = "0123456789ABCDEF";
+                let color = "#";
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+        </script>
+    </head>
+
+    <body>
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_header') %>
+        <%- include('../_partials/_sidebar') %>
+        <!-- prettier-ignore -->
+
+        <main id="main" class="main" style="min-height: 100vh">
+            <section class="section dashboard">
+                <div class="row">
+                    <div class="col-12 col-lg-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h1
+                                    class="text-center pt-3"
+                                    style="font-size: 25px; font-weight: bold"
+                                >
+                                    İlaçlardan Elde Edilen Gelirler (₺)
+                                </h1>
+                                <div
+                                    id="chart_div"
+                                    style="min-width: 100%; height: 60vh"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-8">
+                        <div class="card">
+                            <div
+                                class="card-body"
+                            >
+                                <h1
+                                    class="text-center pt-5"
+                                    style="font-size: 24px; font-weight: bold"
+                                >
+                                    İlaç Satış Listesi
+                                </h1>
+                                <table
+                                    id="table_drugs"
+                                    class="display rounded"
+                                    style="
+                                        width: 100%;
+                                        background-color: whitesmoke;
+                                    "
+                                >
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">ID</th>
+                                            <th>İlaç</th>
+                                            <th class="text-center">Fiyat</th>
+                                            <th class="text-center">Satılan Adet</th>
+                                            <th class="text-center">Toplam Gelir</th>
+                                            <th class="text-center">Sil</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- prettier-ignore -->
+                                        <% list_drug.forEach(item => { %>
+                                        <!-- prettier-ignore -->
+                                        <tr>
+                                            <td class="text-center"><%= item.drug_id %></td>
+                                            <td><%= item.drug_name %></td>
+                                            <td class="text-center"><%= item.drug_sale_price %> ₺</td>
+                                            <td class="text-center"><%= item.drug_total_amount ? item.drug_total_amount : 0 %> Adet</td>
+                                            <td class="text-center"><%= item.drug_total_revenue ? item.drug_total_revenue : 0 %> ₺</td>
+                                            <td class="text-danger text-center">
+                                                <a href="<%= baseURL %>/drug/delete/<%= item.drug_id %>" class="btn btn-outline-danger">Sil</a>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h1
+                                    class="text-center pt-5"
+                                    style="font-size: 24px; font-weight: bold"
+                                >
+                                    İlaç Ekle
+                                </h1>
+
+                                <form
+                                    class="row g-3"
+                                    action="<%= baseURL %>/drug/create"
+                                    method="POST"
+                                >
+                                    <div class="col-12">
+                                        <label
+                                            class="form-label"
+                                            >İlaç Adı</label
+                                        >
+                                        <div
+                                            class="input-group"
+                                        >
+                                            <input
+                                                type="text"
+                                                name="name"
+                                                class="form-control"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label
+                                            class="form-label"
+                                            >Fiyatı</label
+                                        >
+                                        <input
+                                            type="text"
+                                            name="sale_price"
+                                            placeholder="Örn: 49.99"
+                                            class="form-control"
+                                            required
+                                        />
+                                    </div>
+                                    <div class="col-12">
+                                        <button
+                                            class="btn btn-success w-25"
+                                            type="submit"
+                                        >
+                                            Ekle
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- prettier-ignore -->
+        <%- include('../_partials/_footer') %>
+        <%- include('../_partials/_arrowup') %>
+        <%- include('../_partials/_scripts') %>
+        <!-- prettier-ignore -->
+        <script>
+            new DataTable("#table_drugs", {
+                paging: false,
+                scrollCollapse: true,
+                scrollY: "75vh",
+                order: [[4, "desc"]],
+            });
+        </script>
+    </body>
+</html>
